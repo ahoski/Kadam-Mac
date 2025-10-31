@@ -41,14 +41,36 @@ After running this command, you should be able to open Kadam normally.
 2. Select "Open" from the menu
 3. Click "Open" in the security dialog
 
+### Windows
+
+1. Download `Kadam Setup 1.0.2.exe` from the [Releases page](https://github.com/ahoski/Kadam-Mac/releases)
+2. Run the installer
+3. Follow the installation wizard
+
+#### Important: Handling "Windows Protected Your PC" Warning
+
+Since this app is not code-signed with a Microsoft certificate, Windows SmartScreen will show a warning. This is a security feature, not an actual problem with the app.
+
+**To bypass this warning:**
+1. When the blue "Windows protected your PC" screen appears
+2. Click **"More info"** (small link)
+3. Click **"Run anyway"** button
+4. Complete the installation normally
+
 ### First Launch
 
 On first launch, Kadam will prompt you to download the AI model (~2.4 GB). This is a one-time download, and after that, Kadam works completely offline.
 
 ## System Requirements
 
+### macOS
 - macOS 10.12 or later
 - Apple Silicon (M1/M2/M3) Mac
+- ~3 GB free disk space (for the AI model)
+
+### Windows
+- Windows 10 or later
+- ARM64 or x64 processor
 - ~3 GB free disk space (for the AI model)
 
 ## Development
