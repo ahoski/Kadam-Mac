@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashlight - Wrong Answers</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Georgia, serif;
+      background-color: #FFF5BE;
+      min-height: 100vh;
+      color: #333;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .title {
+      font-size: 28px;
+      color: #5a9a9e;
+      margin-top: 15px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 18px;
+    }
+
+    .answers-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .answers-table tr {
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .answers-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .answers-table td {
+      padding: 20px 15px;
+      vertical-align: top;
+    }
+
+    .delete-cell {
+      width: 40px;
+      text-align: center;
+    }
+
+    .delete-btn {
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      opacity: 0.6;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .answer-cell {
+      width: 40%;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .answer-text {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .answer-word {
+      font-size: 14px;
+      color: #666;
+      font-style: italic;
+    }
+
+    .feedback-cell {
+      width: 60%;
+      font-size: 15px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .loading {
+      color: #999;
+      font-style: italic;
+    }
+
+    .error {
+      color: #f44336;
+    }
+
+    .column-headers {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background-color: rgba(90, 154, 158, 0.1);
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+
+    .header-label {
+      font-weight: bold;
+      font-size: 16px;
+      color: #5a9a9e;
+    }
+
+    .header-left {
+      width: 40%;
+      padding-left: 45px;
+    }
+
+    .header-right {
+      width: 60%;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 10px;
+      }
+
+      .answers-table td {
+        font-size: 14px;
+        padding: 15px 10px;
+      }
+
+      .title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="logo.png" alt="Logo" class="logo" onclick="location.href='index.html'">
+    <h1 class="title">Flashlight - Learn from Mistakes</h1>
+  </div>
+
+  <div class="container">
+    <div class="column-headers">
+      <div class="header-label header-left">Answers</div>
+      <div class="header-label header-right">Things to Fix (AI Generated)</div>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      No wrong answers yet. Keep practicing!
+    </div>
+
+    <table class="answers-table" id="answersTable" style="display: none;">
+      <!-- Rows will be dynamically added here -->
+    </table>
+  </div>
+
+  <script>
+    // Load wrong answers from localStorage
+    function loadWrongAnswers() {
+      const wrongAnswers = JSON.parse(localStorage.getItem('wrongAnswers') || '[]');
+      const table = document.getElementById('answersTable');
+      const emptyState = document.getElementById('emptyState');
+
+      if (wrongAnswers.length === 0) {
+        table.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      table.style.display = 'table';
+      emptyState.style.display = 'none';
+      table.innerHTML = '';
+
+      wrongAnswers.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="delete-cell">
+            <img src="delete.png" alt="Delete" class="delete-btn" onclick="deleteAnswer(${index})">
+          </td>
+          <td class="answer-cell">
+            <div class="answer-text">${escapeHtml(item.answer)}</div>
+            ${item.word ? `<div class="answer-word">Word: ${escapeHtml(item.word)}</div>` : ''}
+          </td>
+          <td class="feedback-cell" id="feedback-${index}">
+            ${item.feedback || '<span class="loading">Generating feedback...</span>'}
+          </td>
+        `;
+        table.appendChild(row);
+
+        // Generate feedback if not exists
+        if (!item.feedback) {
+          generateFeedback(item.answer, item.word, index);
+        }
+      });
+    }
+
+    // Generate AI feedback for wrong answer
+    async function generateFeedback(answer, word, index) {
+      try {
+        const prompt = word
+          ? `A grade 3 student wrote: "${answer}" using the word "${word}". In 1-2 short sentences, explain what's wrong with structure, semantics, or grammar. Be brief and encouraging.`
+          : `A grade 3 student wrote: "${answer}". In 1-2 short sentences, explain what's wrong with structure, semantics, or grammar. Be brief and encouraging.`;
+
+        if (!window.electronAPI || !window.electronAPI.aiInference) {
+          throw new Error('AI is not available. Please run the desktop app.');
+        }
+        const feedback = await window.electronAPI.aiInference(prompt);
+
+        // Update localStorage
+        const wrongAnswers = JSON.parse(localStorage.getItem('wrongAnswers') || '[]');
+        if (wrongAnswers[index]) {
+          wrongAnswers[index].feedback = feedback;
+          localStorage.setItem('wrongAnswers', JSON.stringify(wrongAnswers));
+        }
+
+        // Update UI
+        const feedbackCell = document.getElementById(`feedback-${index}`);
+        if (feedbackCell) {
+          feedbackCell.textContent = feedback;
+        }
+      } catch (error) {
+        console.error('Error generating feedback:', error);
+        const feedbackCell = document.getElementById(`feedback-${index}`);
+        if (feedbackCell) {
+          feedbackCell.innerHTML = '<span class="error">Failed to generate feedback</span>';
+        }
+      }
+    }
+
+    // Delete answer
+    function deleteAnswer(index) {
+      if (confirm('Delete this answer?')) {
+        const wrongAnswers = JSON.parse(localStorage.getItem('wrongAnswers') || '[]');
+        wrongAnswers.splice(index, 1);
+        localStorage.setItem('wrongAnswers', JSON.stringify(wrongAnswers));
+        loadWrongAnswers();
+      }
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load answers on page load
+    loadWrongAnswers();
+  </script>
+</body>
+</html>
