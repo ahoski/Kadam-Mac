@@ -1,6 +1,6 @@
 {
   "name": "kadam",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Kadam - Offline AI-powered learning platform with Phi-3",
   "main": "main.js",
   "scripts": {
@@ -28,7 +28,11 @@
     ],
     "mac": {
       "target": ["dmg"],
-      "category": "public.app-category.education"
+      "category": "public.app-category.education",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "type": "distribution"
     },
     "dmg": {
       "contents": [

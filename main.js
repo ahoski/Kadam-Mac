@@ -46,9 +46,6 @@ function createWindow() {
     icon: path.join(__dirname, 'logo.png')
   });
 
-  // Open DevTools in development for debugging
-  mainWindow.webContents.openDevTools();
-
   // Check if model is valid
   if (isModelValid()) {
     // Model exists and is valid, load main app immediately
